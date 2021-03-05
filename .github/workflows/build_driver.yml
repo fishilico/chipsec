@@ -1,0 +1,30 @@
+name: Build Windows driver
+
+on: [push, pull_request]
+
+jobs:
+  windows-test:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python:
+          - 3.8
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Build the driver
+      shell: bash
+      run: python3 setup.py build_ext -i
+
+    - name: Upload everything
+      uses: actions/upload-artifact@v2
+      with:
+        name: everything
+        path: .

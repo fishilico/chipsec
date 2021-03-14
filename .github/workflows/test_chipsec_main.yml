@@ -85,11 +85,11 @@ jobs:
         name: drivers_win7_x64
         path: drivers/win7/x64
 
-    - name: Create a temporary certificate to sign the driver
+    - name: Create a temporary self-signed certificate
       shell: pwsh
       run: |
         # Start-Process PowerShell.exe -Wait -ArgumentList '-ExecutionPolicy Bypass -Verb RunAs -File create-selfsigned-cert.ps1'
-        $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -CertStoreLocation cert:\LocalMachine\My
+        $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -KeyExportPolicy Exportable -CertStoreLocation cert:\LocalMachine\My
         $CertPassword = ConvertTo-SecureString -String "P@ss0wrd" -Force –AsPlainText
         Export-PfxCertificate -Cert $cert -FilePath ChipsecDriverCert.pfx -Password $CertPassword
       working-directory: drivers/win7/sign

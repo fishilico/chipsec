@@ -3,25 +3,37 @@ name: Test chipsec_main
 on: [push, pull_request]
 
 jobs:
-  ubuntu-py3-test:
+  ubuntu-test:
     strategy:
       matrix:
-        ubuntu-version:
-          - ubuntu-20.04
-          - ubuntu-18.04
-          - ubuntu-16.04
-    runs-on: ${{ matrix.ubuntu-version }}
+        versions:
+          - {ubuntu: 20.04, python: 3.9}
+          - {ubuntu: 20.04, python: 3.8}
+          - {ubuntu: 20.04, python: 3.7}
+          - {ubuntu: 20.04, python: 2.7}
+
+          - {ubuntu: 18.04, python: 3.7}
+          - {ubuntu: 18.04, python: 2.7}
+
+          - {ubuntu: 16.04, python: 3.7}
+          - {ubuntu: 18.04, python: 2.7}
+    runs-on: ubuntu-${{ matrix.versions.ubuntu }}
 
     steps:
+    - name: Set up Python ${{ matrix.versions.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.versions.python }}
+
     - uses: actions/checkout@v2
 
     - name: Install dependencies
       run: |
         sudo apt-get update -q
-        sudo apt-get install -qqy dkms python3-setuptools nasm
+        sudo apt-get install -qqy dkms nasm
 
-    - name: Build the driver with Python 3
-      run: python3 setup.py build_ext -i
+    - name: Build the driver with Python
+      run: python setup.py build_ext -i
 
     - name: Build the driver with DKMS
       run: |
@@ -32,41 +44,7 @@ jobs:
         sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
     - name: Install chipsec
-      run: sudo python3 setup.py install
-
-    - name: Run chipsec_main
-      run: sudo chipsec_main
-
-  ubuntu-py2-test:
-    strategy:
-      matrix:
-        ubuntu-version:
-          - ubuntu-20.04
-          - ubuntu-18.04
-          - ubuntu-16.04
-    runs-on: ${{ matrix.ubuntu-version }}
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Install dependencies
-      run: |
-        sudo apt-get update -q
-        sudo apt-get install -qqy python-setuptools nasm
-
-    - name: Build the driver with Python 2
-      run: python2 setup.py build_ext -i
-
-    - name: Build the driver with DKMS
-      run: |
-        KERNEL_VER="$(uname -r)"
-        CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
-        echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        sudo dkms add drivers/linux
-        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
-
-    - name: Install chipsec
-      run: sudo python2 setup.py install
+      run: sudo python setup.py install
 
     - name: Run chipsec_main
       run: sudo chipsec_main
@@ -104,8 +82,11 @@ jobs:
         path: drivers/win7/x64
 
     - name: Create a temporary certificate to sign the driver
-      shell: cmd
-      run: makecert -r -n "CN=Chipsec" -ss ChipsecCertStore -sr LocalMachine
+      shell: pwsh
+      run: |
+        $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -CertStoreLocation cert:\LocalMachine\ChipsecCertStore
+        $CertPassword = ConvertTo-SecureString -String “P@ss0wrd” -Force –AsPlainText
+        Export-PfxCertificate -Cert $cert -FilePath ChipsecDriverCert.pfx -Password $CertPassword
 
     - name: Sign the driver
       shell: cmd

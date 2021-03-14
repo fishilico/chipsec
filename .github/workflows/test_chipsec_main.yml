@@ -47,7 +47,7 @@ jobs:
       run: sudo python setup.py install
 
     - name: Run chipsec_main
-      run: sudo chipsec_main
+      run: sudo chipsec_main --ignore_platform
 
   windows-test:
     runs-on: windows-latest
@@ -84,9 +84,8 @@ jobs:
     - name: Create a temporary certificate to sign the driver
       shell: pwsh
       run: |
-        $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -CertStoreLocation cert:\LocalMachine\ChipsecCertStore
-        $CertPassword = ConvertTo-SecureString -String “P@ss0wrd” -Force –AsPlainText
-        Export-PfxCertificate -Cert $cert -FilePath ChipsecDriverCert.pfx -Password $CertPassword
+        Start-Process PowerShell.exe -Wait -ArgumentList '-ExecutionPolicy Bypass -Verb RunAs -File create-selfsigned-cert.ps1'
+      working-directory: drivers/win7/sign
 
     - name: Sign the driver
       shell: cmd

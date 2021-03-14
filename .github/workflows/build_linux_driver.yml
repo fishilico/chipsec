@@ -11,12 +11,12 @@ jobs:
           - {name: "debian", tag: "10"}
           - {name: "debian", tag: "9"}
           - {name: "debian", tag: "8"}
-          - {name: "debian", tag: "10"}
-          - {name: "ubuntu", "20.10"}
-          - {name: "ubuntu", "20.04"}
-          - {name: "ubuntu", "19.10"}
-          - {name: "ubuntu", "18.04"}
-          - {name: "ubuntu", "16.04"}
+          - {name: "debian", tag: "7"}
+          - {name: "ubuntu", tag: "20.10"}
+          - {name: "ubuntu", tag: "20.04"}
+          - {name: "ubuntu", tag: "19.10"}
+          - {name: "ubuntu", tag: "18.04"}
+          - {name: "ubuntu", tag: "16.04"}
     runs-on: ubuntu-20.04
     container:
       image: docker://docker.io/library/{{ matrix.distro.name }}:{{ matrix.distro.tag }}

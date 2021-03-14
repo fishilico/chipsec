@@ -1,4 +1,4 @@
-name: Build Windows driver
+name: Test Windows support
 
 on: [push, pull_request]
 
@@ -9,7 +9,9 @@ jobs:
     strategy:
       matrix:
         python:
+          - 3.9
           - 3.8
+          - 3.7
 
     steps:
     - uses: actions/checkout@v2
@@ -19,12 +21,24 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
+    - name: Install dependencies
+      shell: bash
+      run: pip install pywin32
+
     - name: Build Windows driver
       shell: bash
       run: python3 setup.py build_ext -i
 
-    - name: Upload everything
+    - name: Upload Windows driver
       uses: actions/upload-artifact@v2
       with:
         name: drivers_win7_x64
         path: drivers/win7/x64
+
+    - name: Install chipsec
+      shell: bash
+      run: python3 setup.py install
+
+    - name: Run chipsec_main
+      shell: bash
+      run: chipsec_main

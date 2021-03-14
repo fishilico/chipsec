@@ -1,0 +1,25 @@
+name: Test Linux support
+
+on: [push, pull_request]
+
+jobs:
+  ubuntu-test:
+    strategy:
+      matrix:
+        ubuntu-version:
+          - ubuntu-20.04
+          - ubuntu-18.04
+          - ubuntu-16.04
+    runs-on: ${{ matrix.ubuntu-version }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the driver
+      run: python3 setup.py build_ext -i
+
+    - name: Install chipsec
+      run: python3 setup.py install
+
+    - name: Run chipsec_main
+      run: chipsec_main

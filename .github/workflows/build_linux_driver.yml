@@ -47,7 +47,7 @@ jobs:
             exit 1
         fi
         echo "Found packaged kernel ${KERNEL_VER}"
-        echo "KERNEL_VER=$(KERNEL_VER)" >> "$GITHUB_ENV"
+        echo "KERNEL_VER=${KERNEL_VER}" >> "$GITHUB_ENV"
 
     - name: Build the driver with DKMS
       run: |

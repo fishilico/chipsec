@@ -26,10 +26,10 @@ jobs:
 
     - name: Install Arch Linux dependencies
       if: matrix.distro.name == "archlinux"
-      run: pacman -Syu --noconfirm dkms nasm
+      run: pacman -Syu --noconfirm dkms linux-headers nasm
 
     - name: Install Debian and Ubuntu dependencies
-      if: matrix.distro.name == "debian" || matrix.distro.name == "ubuntu"
+      if: matrix.distro.name == "debian" or matrix.distro.name == "ubuntu"
       run: |
         apt-get update -q
         apt-get install -qqy dkms nasm

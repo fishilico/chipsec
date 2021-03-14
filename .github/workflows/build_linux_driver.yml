@@ -26,11 +26,17 @@ jobs:
       if: matrix.distro.name == 'archlinux'
       run: pacman -Syu --noconfirm dkms linux-headers nasm
 
-    - name: Install Debian and Ubuntu dependencies
-      if: matrix.distro.name == 'debian' || matrix.distro.name == 'ubuntu'
+    - name: Install Debian dependencies
+      if: matrix.distro.name == 'debian'
       run: |
         apt-get update -q
         apt-get install -qqy dkms nasm
+
+    - name: Install Ubuntu dependencies
+      if: matrix.distro.name == 'ubuntu'
+      run: |
+        apt-get update -q
+        apt-get install -qqy dkms linux-headers-generic nasm
 
     - name: Compute packaged kernel version
       run: |

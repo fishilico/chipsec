@@ -18,10 +18,18 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -q
-        sudo apt-get install -qqy python3-setuptools nasm
+        sudo apt-get install -qqy dkms python3-setuptools nasm
 
-    - name: Build the driver
+    - name: Build the driver with Python 3
       run: python3 setup.py build_ext -i
+
+    - name: Build the driver with DKMS
+      run: |
+        KERNEL_VER="$(uname -r)"
+        CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
+        echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
+        dkms add drivers/linux
+        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
     - name: Install chipsec
       run: sudo python3 setup.py install
@@ -46,8 +54,16 @@ jobs:
         sudo apt-get update -q
         sudo apt-get install -qqy python-setuptools nasm
 
-    - name: Build the driver
+    - name: Build the driver with Python 2
       run: python2 setup.py build_ext -i
+
+    - name: Build the driver with DKMS
+      run: |
+        KERNEL_VER="$(uname -r)"
+        CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
+        echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
+        dkms add drivers/linux
+        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
     - name: Install chipsec
       run: sudo python2 setup.py install

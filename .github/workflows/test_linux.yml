@@ -24,10 +24,10 @@ jobs:
       run: python3 setup.py build_ext -i
 
     - name: Install chipsec
-      run: python3 setup.py install
+      run: sudo python3 setup.py install
 
     - name: Run chipsec_main
-      run: chipsec_main
+      run: sudo chipsec_main
 
   ubuntu-py2-test:
     strategy:
@@ -50,7 +50,7 @@ jobs:
       run: python2 setup.py build_ext -i
 
     - name: Install chipsec
-      run: python2 setup.py install
+      run: sudo python2 setup.py install
 
     - name: Run chipsec_main
-      run: chipsec_main
+      run: sudo chipsec_main

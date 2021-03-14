@@ -19,17 +19,17 @@ jobs:
         KERNEL_VER="$(pacman -Qql linux-headers | sed -n 's:^/usr/lib/modules/\([^/]\+\)/.*:\1:p' | head -n 1)"
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        sudo dkms add drivers/linux
-        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+        dkms add drivers/linux
+        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
   debian:
     strategy:
       matrix:
         version:
-          - 8
-          - 9
-          - 10
           - 11
+          - 10
+          - 9
+          - 8
     runs-on: ubuntu-20.04
     container:
       image: docker://docker.io/library/debian:${{ matrix.version }}
@@ -39,28 +39,28 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update -q
-        sudo apt-get install -qqy dkms nasm
+        apt-get update -q
+        apt-get install -qqy dkms nasm
 
     - name: Build the driver with DKMS
       run: |
         KERNEL_VER="$(ANG=C dpkg --status linux-headers-amd64 2>/dev/null | sed -n 's/^Depends: linux-headers-\(.*\)/\1/p' | head -n 1)"
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        sudo dkms add drivers/linux
-        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+        dkms add drivers/linux
+        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
   ubuntu:
     strategy:
       matrix:
         version:
-          - 20.10
-          - 20.04
-          - 19.10
-          - 19.04
-          - 18.10
-          - 18.04
-          - 16.04
+          - "20.10"
+          - "20.04"
+          - "19.10"
+          - "19.04"
+          - "18.10"
+          - "18.04"
+          - "16.04"
     runs-on: ubuntu-20.04
     container:
       image: docker://docker.io/library/ubuntu:${{ matrix.version }}
@@ -70,13 +70,13 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update -q
-        sudo apt-get install -qqy dkms nasm
+        apt-get update -q
+        apt-get install -qqy dkms nasm
 
     - name: Build the driver with DKMS
       run: |
         KERNEL_VER="$(ANG=C dpkg --status linux-headers-generic 2>/dev/null | sed -n 's/^Depends: linux-headers-\(.*\)/\1/p' | head -n 1)"
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        sudo dkms add drivers/linux
-        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+        dkms add drivers/linux
+        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"

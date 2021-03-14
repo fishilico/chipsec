@@ -19,12 +19,12 @@ jobs:
       with:
         python-version: ${{ matrix.python }}
 
-    - name: Build the driver
+    - name: Build Windows driver
       shell: bash
       run: python3 setup.py build_ext -i
 
     - name: Upload everything
       uses: actions/upload-artifact@v2
       with:
-        name: everything
-        path: .
+        name: drivers_win7_x64
+        path: drivers/win7/x64

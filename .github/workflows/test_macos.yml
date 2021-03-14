@@ -1,0 +1,19 @@
+name: Test macOS support
+
+on: [push, pull_request]
+
+jobs:
+  macos-py3-test:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build the driver
+      run: python3 setup.py build_ext -i
+
+    - name: Install chipsec
+      run: sudo python3 setup.py install
+
+    - name: Run chipsec_main
+      run: sudo chipsec_main

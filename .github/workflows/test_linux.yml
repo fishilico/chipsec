@@ -18,7 +18,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -q
-        sudo apt-get install -qqy python3-setuptools
+        sudo apt-get install -qqy python3-setuptools nasm
 
     - name: Build the driver
       run: python3 setup.py build_ext -i
@@ -44,7 +44,7 @@ jobs:
     - name: Install dependencies
       run: |
         sudo apt-get update -q
-        sudo apt-get install -qqy python-setuptools
+        sudo apt-get install -qqy python-setuptools nasm
 
     - name: Build the driver
       run: python2 setup.py build_ext -i

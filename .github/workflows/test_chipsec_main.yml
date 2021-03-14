@@ -28,8 +28,8 @@ jobs:
         KERNEL_VER="$(uname -r)"
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        dkms add drivers/linux
-        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+        sudo dkms add drivers/linux
+        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
     - name: Install chipsec
       run: sudo python3 setup.py install
@@ -62,26 +62,11 @@ jobs:
         KERNEL_VER="$(uname -r)"
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
-        dkms add drivers/linux
-        dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+        sudo dkms add drivers/linux
+        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
     - name: Install chipsec
       run: sudo python2 setup.py install
-
-    - name: Run chipsec_main
-      run: sudo chipsec_main
-
-  macos-py3-test:
-    runs-on: macos-10.14  # macos-latest uses arm64e assembler
-
-    steps:
-    - uses: actions/checkout@v2
-
-    - name: Build the driver
-      run: python3 setup.py build_ext -i
-
-    - name: Install chipsec
-      run: sudo python3 setup.py install
 
     - name: Run chipsec_main
       run: sudo chipsec_main
@@ -118,9 +103,28 @@ jobs:
         name: drivers_win7_x64
         path: drivers/win7/x64
 
+    - name: Create a temporary certificate to sign the driver
+      shell: cmd
+      run: makecert -r -n "CN=Chipsec" -ss ChipsecCertStore -sr LocalMachine
+
+    - name: Sign the driver
+      shell: cmd
+      run: sign64_sys.bat
+      working-directory: drivers/win7/sign
+
+    - name: Upload Windows signed driver
+      uses: actions/upload-artifact@v2
+      with:
+        name: drivers_win7_sign
+        path: drivers/win7/sign
+
     - name: Install chipsec
       shell: bash
       run: python3 setup.py install
+
+    - name: Copy the signed driver to chipsec directory
+      shell: bash
+      run: cp -f drivers/win7/sign/chipsec_hlpr.sys drivers/win7/x64/chipsec_hlpr.sys  
 
     - name: Run chipsec_main
       shell: bash

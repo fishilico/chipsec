@@ -68,5 +68,5 @@ jobs:
     - name: Show modinfo on the kernel module
       run: |
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
-        MODULE="$(ls -1 "/var/lib/dkms/chipsec/${CHIPSEC_MODULE_VER}/${KERNEL_VER}/$(uname -m)/module/chipsec.ko.* | head -n1)"
+        MODULE="$(ls -1 "/var/lib/dkms/chipsec/${CHIPSEC_MODULE_VER}/${KERNEL_VER}/$(uname -m)/module/chipsec.ko"* | head -n1)"
         modinfo "${MODULE}"

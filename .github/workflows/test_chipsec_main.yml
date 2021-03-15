@@ -116,9 +116,9 @@ jobs:
       shell: bash
       run: python3 setup.py install
 
-    - name: Copy the signed driver to chipsec directory
-      shell: bash
-      run: cp -f drivers/win7/sign/chipsec_hlpr.sys drivers/win7/x64/chipsec_hlpr.sys  
+    #- name: Copy the signed driver to chipsec directory
+    #  shell: bash
+    #  run: cp -f drivers/win7/sign/chipsec_hlpr.sys drivers/win7/x64/chipsec_hlpr.sys  
 
     - name: Run chipsec_main
       shell: bash

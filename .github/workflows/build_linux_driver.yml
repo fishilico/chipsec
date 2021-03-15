@@ -34,7 +34,7 @@ jobs:
     - name: Install CentOS dependencies
       if: matrix.distro.name == 'centos'
       run: |
-        yum install --enablerepo=extras epel-release
+        yum install -y --enablerepo=extras epel-release
         yum install -y dkms kernel-devel nasm
 
     - name: Install Debian dependencies

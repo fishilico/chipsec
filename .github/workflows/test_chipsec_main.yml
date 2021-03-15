@@ -110,7 +110,7 @@ jobs:
     - name: Install the driver signature certificate
       shell: pwsh
       run: |
-        Import-PfxCertificate -FilePath "drivers/win7/x64/Debug/chipsec_hlpr.cer" -CertStoreLocation "Cert:\LocalMachine\Root"
+        Import-Certificate -FilePath "drivers/win7/x64/Debug/chipsec_hlpr.cer" -CertStoreLocation "Cert:\LocalMachine\Root"
 
     - name: Install chipsec
       shell: bash

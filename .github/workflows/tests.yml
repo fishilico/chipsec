@@ -1,9 +1,10 @@
-name: Build Linux kernel module for many distributions
+name: Run tests
 
 on: [push, pull_request]
 
 jobs:
   build-linux-km:
+    name: Build Linux kernel module for many distribution
     strategy:
       matrix:
         distro:
@@ -123,6 +124,91 @@ jobs:
     - name: Upload Linux driver from ${{ steps.modinfo.outputs.module_path }}
       uses: actions/upload-artifact@v2
       with:
-        name: chipsec-${{ steps.versions.outputs.chipsec }}.${{ matrix.distro.name }}-${{ matrix.distro.tag }}${{ matrix.distro.variant }}-${{ steps.versions.outputs.kernel }}.${{ steps.versions.outputs.uname_m }}.ko
+        name: chipsec-${{ steps.versions.outputs.chipsec }}.${{ matrix.distro.name }}-${{ matrix.distro.tag }}${{ matrix.distro.variant }}-${{ steps.versions.outputs.kernel }}.${{ steps.versions.outputs.uname_m }}
         path: ${{ steps.modinfo.outputs.module_path }}
         if-no-files-found: error
+
+  windows-test:
+    name: Build Windows driver
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python:
+          - 3.9
+          - 3.8
+          - 3.7
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+
+    - name: Install dependencies
+      shell: bash
+      run: pip install pywin32
+
+    - name: Build Windows driver
+      shell: bash
+      run: python setup.py build_ext -i
+
+    - name: Upload Windows driver
+      uses: actions/upload-artifact@v2
+      with:
+        name: drivers_win7_x64
+        path: drivers/win7/x64
+        if-no-files-found: error
+
+  ubuntu-test:
+    name: Test chipsec_main on Ubuntu
+    strategy:
+      matrix:
+        versions:
+          - {ubuntu: 20.04, python: 3.9}
+          - {ubuntu: 20.04, python: 3.8}
+          - {ubuntu: 20.04, python: 3.7}
+          - {ubuntu: 20.04, python: 2.7}
+
+          - {ubuntu: 18.04, python: 3.7}
+          - {ubuntu: 18.04, python: 2.7}
+
+          - {ubuntu: 16.04, python: 3.7}
+          - {ubuntu: 18.04, python: 2.7}
+    runs-on: ubuntu-${{ matrix.versions.ubuntu }}
+
+    steps:
+    - name: Set up Python ${{ matrix.versions.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.versions.python }}
+
+    - uses: actions/checkout@v2
+
+    - name: Patch chipsec_main to return true even when some module failed
+      run: |
+        sed 's/^        return modules_failed$/        return 0/' -i chipsec_main.py
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update -q
+        sudo apt-get install -qqy dkms nasm
+
+    - name: Build the driver with Python
+      run: python setup.py build_ext -i
+
+    - name: Build the driver with DKMS
+      run: |
+        KERNEL_VER="$(uname -r)"
+        CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
+        echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
+        sudo dkms add drivers/linux
+        sudo dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
+
+    - name: Install chipsec
+      run: sudo python setup.py install
+
+    - name: Run chipsec_main
+      run: sudo chipsec_main --ignore_platform

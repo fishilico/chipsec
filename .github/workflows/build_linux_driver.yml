@@ -8,6 +8,11 @@ jobs:
       matrix:
         distro:
           - {name: "archlinux", tag: "latest"}
+          - {name: "archlinux", tag: "latest", variant: "-lts"}
+          - {name: "archlinux", tag: "latest", variant: "-zen"}
+          - {name: "centos", tag: "6"}
+          - {name: "centos", tag: "7"}
+          - {name: "centos", tag: "8"}
           - {name: "debian", tag: "10"}
           - {name: "debian", tag: "9"}
           - {name: "debian", tag: "8"}
@@ -24,7 +29,13 @@ jobs:
 
     - name: Install Arch Linux dependencies
       if: matrix.distro.name == 'archlinux'
-      run: pacman -Syu --noconfirm dkms linux-headers nasm
+      run: |
+        pacman -Syu --noconfirm dkms linux-headers${{ matrix.distro.variant }} nasm
+
+    - name: Install CentOS dependencies
+      if: matrix.distro.name == 'centos'
+      run: |
+        yum install -y dkms kernel-devel nasm
 
     - name: Install Debian dependencies
       if: matrix.distro.name == 'debian'
@@ -42,7 +53,9 @@ jobs:
       run: |
         KERNEL_VER=''
         if [ "${{ matrix.distro.name }}" = archlinux ] ; then
-            KERNEL_VER="$(pacman -Qql linux-headers | sed -n 's:^/usr/lib/modules/\([^/]\+\)/.*:\1:p' | head -n 1)"
+            KERNEL_VER="$(pacman -Qql "linux-headers${{ matrix.distro.variant }}" | sed -n 's:^/usr/lib/modules/\([^/]\+\)/.*:\1:p' | head -n 1)"
+        elif [ "${{ matrix.distro.name }}" = centos ] ; then
+            KERNEL_VER="$(LANG=C rpm -qi kernel-devel 2>/dev/null | sed -n 's/^Source RPM *: kernel-\(.*\).src.rpm$/\1.x86_64/p' | tail -n 1)")"
         elif [ "${{ matrix.distro.name }}" = debian ] ; then
             KERNEL_VER="$(LANG=C dpkg --status linux-headers-amd64 2>/dev/null | sed -n 's/^Depends: linux-headers-\(.*\)/\1/p' | head -n 1)"
         elif [ "${{ matrix.distro.name }}" = ubuntu ] ; then
@@ -62,7 +75,7 @@ jobs:
         dkms add drivers/linux
         dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
 
-    - name: dkms status
+    - name: Show dkms status
       run: dkms status
 
     - name: Show modinfo on the kernel module

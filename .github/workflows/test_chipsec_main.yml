@@ -85,27 +85,32 @@ jobs:
         name: drivers_win7_x64
         path: drivers/win7/x64
 
-    - name: Create a temporary self-signed certificate
+    #- name: Create a temporary self-signed certificate
+    #  shell: pwsh
+    #  run: |
+    #    # Start-Process PowerShell.exe -Wait -ArgumentList '-ExecutionPolicy Bypass -Verb RunAs -File create-selfsigned-cert.ps1'  # FIXME does it need elevation?
+    #    $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -KeyExportPolicy Exportable -CertStoreLocation cert:\LocalMachine\My
+    #    $CertPassword = ConvertTo-SecureString -String "MyP@ssw0rd.1" -Force -AsPlainText
+    #    Export-PfxCertificate -Cert $cert -Password $CertPassword -FilePath ChipsecDriverCert.pfx
+    #  working-directory: drivers/win7/sign
+
+    #- name: Sign the driver
+    #  shell: pwsh
+    #  run: |
+    #    Copy-Item -Path ..\x64\Debug\chipsec_hlpr.sys -Destination .
+    #    SignTool sign /s ChipsecDriverCert.pfx /p MyP@ssw0rd.1 /t http://timestamp.verisign.com/scripts/timstamp.dll chipsec_hlpr.sys
+    #  working-directory: drivers/win7/sign
+
+    #- name: Upload Windows signed driver
+    #  uses: actions/upload-artifact@v2
+    #  with:
+    #    name: drivers_win7_sign
+    #    path: drivers/win7/sign
+
+    - name: Install the driver signature certificate
       shell: pwsh
       run: |
-        # Start-Process PowerShell.exe -Wait -ArgumentList '-ExecutionPolicy Bypass -Verb RunAs -File create-selfsigned-cert.ps1'  # FIXME does it need elevation?
-        $cert = New-SelfSignedCertificate -Subject "CN=Chipsec" -Type CodeSigningCert -KeyExportPolicy Exportable -CertStoreLocation cert:\LocalMachine\My
-        $CertPassword = ConvertTo-SecureString -String "MyP@ssw0rd.1" -Force -AsPlainText
-        Export-PfxCertificate -Cert $cert -Password $CertPassword -FilePath ChipsecDriverCert.pfx
-      working-directory: drivers/win7/sign
-
-    - name: Sign the driver
-      shell: pwsh
-      run: |
-        Copy-Item -Path ..\x64\Debug\chipsec_hlpr.sys -Destination .
-        SignTool sign /s ChipsecDriverCert.pfx /p MyP@ssw0rd.1 /t http://timestamp.verisign.com/scripts/timstamp.dll chipsec_hlpr.sys
-      working-directory: drivers/win7/sign
-
-    - name: Upload Windows signed driver
-      uses: actions/upload-artifact@v2
-      with:
-        name: drivers_win7_sign
-        path: drivers/win7/sign
+        Import-PfxCertificate -FilePath "drivers/win7/x64/Debug/chipsec_hlpr.cer" -CertStoreLocation "Cert:\LocalMachine\Root"
 
     - name: Install chipsec
       shell: bash

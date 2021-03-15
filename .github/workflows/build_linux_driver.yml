@@ -11,7 +11,7 @@ jobs:
           - {name: "archlinux", tag: "latest", variant: "-lts"}
           - {name: "archlinux", tag: "latest", variant: "-zen"}
           - {name: "centos", tag: "7"}
-          - {name: "centos", tag: "8"}
+          #- {name: "centos", tag: "8"} # could not find nasm?
           - {name: "debian", tag: "10"}
           - {name: "debian", tag: "9"}
           - {name: "debian", tag: "8"}

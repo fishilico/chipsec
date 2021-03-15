@@ -125,3 +125,4 @@ jobs:
       with:
         name: chipsec-${{ steps.versions.outputs.chipsec }}.${{ matrix.distro.name }}-${{ matrix.distro.tag }}${{ matrix.distro.variant }}-${{ steps.versions.outputs.kernel }}.${{ steps.versions.outputs.uname_m }}.ko
         path: ${{ steps.modinfo.outputs.module_path }}
+        if-no-files-found: error

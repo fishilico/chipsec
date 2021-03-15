@@ -48,7 +48,7 @@ jobs:
         apk --no-cache --update add linux${{ matrix.distro.variant }} linux${{ matrix.distro.variant }}-dev nasm
 
         # DKMS is not yet packaged in Alpine
-        apk --no-cache --update add gcc git make
+        apk --no-cache --update add bash gcc git make
         git clone --depth=1 --branch=v2.8.4 https://github.com/dell/dkms /opt/dkms
         make -C /opt/dkms install
 
@@ -97,12 +97,15 @@ jobs:
         echo "Found packaged kernel ${KERNEL_VER}"
         echo "KERNEL_VER=${KERNEL_VER}" >> "$GITHUB_ENV"
 
-        echo "::set-output name=kernel::${KERNEL_VER}"
-        echo "::set-output name=chipsec::$(cat chipsec/VERSION)"
-
-    - name: Build Linux driver with DKMS for {{ steps.versions.outputs.kernel }}
-      run: |
         CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
+        echo "CHIPSEC_MODULE_VER=${CHIPSEC_MODULE_VER}" >> "$GITHUB_ENV"
+
+        echo "::set-output name=kernel::${KERNEL_VER}"
+        echo "::set-output name=chipsec::${CHIPSEC_MODULE_VER}"
+        echo "::set-output name=uname_m::$(uname -m)"
+
+    - name: Build Linux driver with DKMS for ${{ steps.versions.outputs.kernel }}
+      run: |
         echo "Building chipsec ${CHIPSEC_MODULE_VER} for Linux kernel ${KERNEL_VER}"
         dkms add drivers/linux
         dkms install -m chipsec -v "${CHIPSEC_MODULE_VER}" -k "${KERNEL_VER}"
@@ -113,7 +116,6 @@ jobs:
     - name: Show modinfo on the kernel module
       id: modinfo
       run: |
-        CHIPSEC_MODULE_VER="$(cat chipsec/VERSION)"
         MODULE="$(ls -1 "/var/lib/dkms/chipsec/${CHIPSEC_MODULE_VER}/${KERNEL_VER}/$(uname -m)/module/chipsec.ko"* | head -n1)"
         echo "::set-output name=module_path::${MODULE}"
         modinfo "${MODULE}"
@@ -121,5 +123,5 @@ jobs:
     - name: Upload Linux driver from ${{ steps.modinfo.outputs.module_path }}
       uses: actions/upload-artifact@v2
       with:
-        name: chipsec.${{ matrix.distro.name }}.${{ matrix.distro.tag }}${{ matrix.distro.variant }}
+        name: chipsec-${{ steps.versions.outputs.chipsec }}.${{ matrix.distro.name }}-${{ matrix.distro.tag }}${{ matrix.distro.variant }}-${{ steps.versions.outputs.kernel }}.${{ steps.versions.outputs.uname_m }}.ko
         path: ${{ steps.modinfo.outputs.module_path }}

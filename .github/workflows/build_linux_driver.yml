@@ -7,11 +7,8 @@ jobs:
     strategy:
       matrix:
         distro:
-          - {name: "alpine", tag: "3.13", variant: "-vanilla"}
           - {name: "alpine", tag: "3.13", variant: "-lts"}
-          - {name: "alpine", tag: "3.12", variant: "-vanilla"}
           - {name: "alpine", tag: "3.12", variant: "-lts"}
-          - {name: "alpine", tag: "3.11", variant: "-vanilla"}
           - {name: "alpine", tag: "3.11", variant: "-lts"}
           - {name: "alpine", tag: "3.10", variant: "-vanilla"}
           - {name: "alpine", tag: "3.9", variant: "-vanilla"}
@@ -21,8 +18,11 @@ jobs:
           - {name: "alpine", tag: "3.6", variant: "-vanilla"}
           - {name: "alpine", tag: "3.6", variant: "-hardened"}
           - {name: "alpine", tag: "3.5", variant: "-vanilla"}
+          - {name: "alpine", tag: "3.5", variant: "-grsec"}
           - {name: "alpine", tag: "3.4", variant: "-vanilla"}
+          - {name: "alpine", tag: "3.4", variant: "-grsec"}
           - {name: "alpine", tag: "3.3", variant: "-vanilla"}
+          - {name: "alpine", tag: "3.3", variant: "-grsec"}
           - {name: "archlinux", tag: "latest"}
           - {name: "archlinux", tag: "latest", variant: "-lts"}
           - {name: "archlinux", tag: "latest", variant: "-zen"}
@@ -45,7 +45,12 @@ jobs:
     - name: Install Alpine dependencies
       if: matrix.distro.name == 'alpine'
       run: |
-        apk --no-cache --update add dkms linux${{ matrix.distro.variant }}-dev nasm
+        apk --no-cache --update add linux${{ matrix.distro.variant }} linux${{ matrix.distro.variant }}-dev nasm
+
+        # DKMS is not yet packaged in Alpine
+        apk --no-cache --update add gcc git make
+        git clone --depth=1 --branch=v2.8.4 https://github.com/dell/dkms /opt/dkms
+        make -C /opt/dkms install
 
     - name: Install Arch Linux dependencies
       if: matrix.distro.name == 'archlinux'
@@ -75,7 +80,7 @@ jobs:
       run: |
         KERNEL_VER=''
         if [ "${{ matrix.distro.name }}" = alpine ] ; then
-          KERNEL_VER="$(apk info --contents "linux${{ matrix.distro.variant }}-dev" | sed -n 's:^lib/modules/\([^/][^/]*\)/.*:\1:p' | head -n 1)"
+            KERNEL_VER="$(apk info --contents "linux${{ matrix.distro.variant }}-dev" | sed -n 's:^lib/modules/\([^/][^/]*\)/.*:\1:p' | head -n 1)"
         elif [ "${{ matrix.distro.name }}" = archlinux ] ; then
             KERNEL_VER="$(pacman -Qql "linux${{ matrix.distro.variant }}-headers" | sed -n 's:^/usr/lib/modules/\([^/]\+\)/.*:\1:p' | head -n 1)"
         elif [ "${{ matrix.distro.name }}" = centos ] ; then

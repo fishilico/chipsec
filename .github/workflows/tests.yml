@@ -158,7 +158,7 @@ jobs:
     - name: Upload Windows driver
       uses: actions/upload-artifact@v2
       with:
-        name: drivers_win7_x64
+        name: drivers_win7_x64__from_py${{ matrix.python }}
         path: drivers/win7/x64
         if-no-files-found: error
 

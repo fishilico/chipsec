@@ -1745,7 +1745,7 @@ static struct miscdevice chipsec_dev = {
 */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,4,0) && LINUX_VERSION_CODE < KERNEL_VERSION(5,10,0)
 
-unsigned long chipsec_lookup_name(const char *name)
+void * chipsec_lookup_name(const char *name)
 {
 	char *file_name                       = KALLSYMS_PATH;
 	int i                                 = 0;         /* Read Index */
@@ -1813,12 +1813,12 @@ CLEAN_UP:
 	if(proc_ksyms != NULL)
 		filp_close(proc_ksyms, 0);
 
-	return ret;
+	return (void *)ret;
 }
 
 #elif LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,0)
 
-unsigned long chipsec_lookup_name(const char *name)
+void * chipsec_lookup_name(const char *name)
 {
 	int kp_ret = 0;
 	unsigned long kaddr = 0;
@@ -1828,7 +1828,7 @@ unsigned long chipsec_lookup_name(const char *name)
 	kp_ret = register_kprobe(&kp);
 	if(kp_ret < 0){
 		printk(KERN_ALERT"register_kprobe failed, returned %d\n", kp_ret);
-		return kp_ret;
+		return ERR_PTR(kp_ret);
 	}
 
 	chipsec_lookup_name_fp = (unsigned long (*) (const char *name))kp.addr;
@@ -1837,11 +1837,11 @@ unsigned long chipsec_lookup_name(const char *name)
 	static_call_update(chipsec_lookup_name_sc, chipsec_lookup_name_fp);
 	kaddr = static_call(chipsec_lookup_name_sc)(name);
 
-	return kaddr;
+	return (void *)kaddr;
 }
 #else
-unsigned long chipsec_lookup_name(const char *name){
-	return kallsyms_lookup_name(name);
+void * chipsec_lookup_name(const char *name){
+	return (void *)kallsyms_lookup_name(name);
 }
 
 #endif
@@ -1860,22 +1860,21 @@ int find_symbols(void)
 		guess_phys_mem_access_prot = &cs_phys_mem_access_prot;
 		#endif
 	#else
-		guess_page_is_ram = (void *)chipsec_lookup_name("page_is_ram");
+		guess_page_is_ram = chipsec_lookup_name("page_is_ram");
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5,10,0)
 		static_call_update(chipsec_page_is_ram_sc, guess_page_is_ram);
 #endif	
 		#ifdef __HAVE_PHYS_MEM_ACCESS_PROT
-		guess_phys_mem_access_prot = (void *)chipsec_lookup_name("phys_mem_access_prot");
+		guess_phys_mem_access_prot = chipsec_lookup_name("phys_mem_access_prot");
 		#else
 		guess_phys_mem_access_prot = &cs_phys_mem_access_prot;
 		#endif
+	#endif
 
-		if(guess_page_is_ram == 0 || guess_phys_mem_access_prot == 0)
-		{
-			printk("Chipsec find_symbols failed. Unloading module");
-			return -1;
-		}
-	#endif 
+	if (IS_ERR_OR_NULL(guess_page_is_ram) || IS_ERR_OR_NULL(guess_phys_mem_access_prot)) {
+		printk("Chipsec find_symbols failed. Unloading module");
+		return -1;
+	}
 	return 0;
 }
 
